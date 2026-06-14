@@ -1,4 +1,4 @@
-﻿@extends('layouts.fitgo-app')
+@extends('layouts.fitgo-app')
 
 @section('title', 'FitGo — My Dashboard')
 @section('pageTitle', 'My Dashboard')
@@ -306,25 +306,38 @@
     <!-- DAILY PROGRESS LOG -->
     <div class="card-dark mb-4">
       <div class="card-title-sm">Log Today</div>
+      @if (session('status') === 'progress-saved')
+        <div class="mb-3" style="padding:10px 14px;border-radius:10px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:var(--g);font-size:.88rem">
+          Saved for today. Your stats and chart are updated.
+        </div>
+      @endif
+      @if ($errors->any())
+        <div class="mb-3" style="padding:10px 14px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#fca5a5;font-size:.88rem">
+          @foreach ($errors->all() as $error)
+            <div>{{ $error }}</div>
+          @endforeach
+        </div>
+      @endif
       <form method="POST" action="{{ route('progress.store') }}" class="row g-3 align-items-end">
         @csrf
         <input type="hidden" name="logged_date" value="{{ now()->toDateString() }}">
         <div class="col-md-3 col-6">
           <label class="card-label">Weight (kg)</label>
-          <input type="number" step="0.1" name="weight_kg" value="{{ old('weight_kg', $latestLog?->weight_kg) }}" class="form-control" style="background:var(--dark4);border:1px solid var(--border);color:var(--heading);border-radius:10px;padding:10px 12px">
+          <input type="number" step="0.1" min="20" max="300" name="weight_kg" value="{{ old('weight_kg', $todayLog?->weight_kg ?? $user->weight_kg) }}" class="form-control" style="background:var(--dark4);border:1px solid var(--border);color:var(--heading);border-radius:10px;padding:10px 12px">
         </div>
         <div class="col-md-3 col-6">
           <label class="card-label">Water (L)</label>
-          <input type="number" step="0.1" name="water_liters" value="{{ old('water_liters', $latestLog?->water_liters) }}" class="form-control" style="background:var(--dark4);border:1px solid var(--border);color:var(--heading);border-radius:10px;padding:10px 12px">
+          <input type="number" step="0.1" min="0" max="20" name="water_liters" value="{{ old('water_liters', $todayLog?->water_liters) }}" class="form-control" style="background:var(--dark4);border:1px solid var(--border);color:var(--heading);border-radius:10px;padding:10px 12px">
         </div>
         <div class="col-md-3 col-6">
           <label class="card-label">Steps</label>
-          <input type="number" name="steps" value="{{ old('steps', $latestLog?->steps) }}" class="form-control" style="background:var(--dark4);border:1px solid var(--border);color:var(--heading);border-radius:10px;padding:10px 12px">
+          <input type="number" min="0" name="steps" value="{{ old('steps', $todayLog?->steps) }}" class="form-control" style="background:var(--dark4);border:1px solid var(--border);color:var(--heading);border-radius:10px;padding:10px 12px">
         </div>
         <div class="col-md-3 col-12">
           <button type="submit" class="btn-sm-g" style="width:100%">Save log</button>
         </div>
       </form>
+      <p style="font-size:.75rem;color:var(--muted);margin:12px 0 0">One row per day per user in the database (<code>progress_logs</code>).</p>
     </div>
 
     <!-- CHAT STRIP -->
@@ -334,7 +347,7 @@
           <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🧑‍🏫</div>
           <div>
             <div style="font-weight:700;color:var(--heading)">FitGo Coach</div>
-            <div style="font-size:.82rem;color:var(--muted)">OpenAI coach with rule fallback — same brain as the floating chat widget.</div>
+            <div style="font-size:.82rem;color:var(--muted)">Built-in FitGo AI coach — natural chat on your plan (optional OpenAI if you add a key in .env).</div>
           </div>
         </div>
         <a href="{{ route('fitgo.coach') }}" class="btn-sm-g" style="background:linear-gradient(135deg,var(--blue),#1d4ed8);box-shadow:none;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
@@ -354,7 +367,7 @@
           <span style="font-weight:700;font-size:.9rem;color:var(--heading)">FitGo AI Chat</span>
           <button type="button" id="aiChatClose" class="btn btn-sm btn-link" style="color:var(--muted);text-decoration:none;padding:0">✕</button>
         </div>
-        <div id="aiChatMessages" style="flex:1;overflow-y:auto;padding:12px 14px;max-height:360px;font-size:.85rem;line-height:1.45;color:var(--heading)"></div>
+        <div id="aiChatMessages" class="fitgo-ai-thread" style="flex:1;overflow-y:auto;padding:12px 14px;max-height:360px"></div>
         <div id="aiChatTyping" style="display:none;padding:0 14px 8px;font-size:.82rem;color:var(--muted)"><span class="coach-typing-dot"></span><span class="coach-typing-dot"></span><span class="coach-typing-dot"></span></div>
         <form id="aiChatForm" style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;background:var(--dark4)">
           @csrf
@@ -370,6 +383,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/fitgo-ai-chat.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
   document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
@@ -414,97 +428,31 @@
   });
 
   (function () {
-    const chatUrl = @json($aiChatUrl);
-    const historyUrl = @json($aiHistoryUrl);
     const panel = document.getElementById('aiChatPanel');
     const toggle = document.getElementById('aiChatToggle');
     const closeBtn = document.getElementById('aiChatClose');
-    const messagesEl = document.getElementById('aiChatMessages');
-    const typingEl = document.getElementById('aiChatTyping');
-    const form = document.getElementById('aiChatForm');
     const input = document.getElementById('aiChatInput');
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-    function appendBubble(role, text) {
-      const wrap = document.createElement('div');
-      wrap.style.marginBottom = '10px';
-      wrap.style.textAlign = role === 'user' ? 'right' : 'left';
-      const bubble = document.createElement('div');
-      bubble.style.display = 'inline-block';
-      bubble.style.maxWidth = '92%';
-      bubble.style.padding = '10px 12px';
-      bubble.style.borderRadius = '12px';
-      bubble.style.fontSize = '.84rem';
-      bubble.style.lineHeight = '1.45';
-      if (role === 'user') {
-        bubble.style.background = 'rgba(59,130,246,.18)';
-        bubble.style.border = '1px solid rgba(59,130,246,.25)';
-      } else {
-        bubble.style.background = 'var(--dark4)';
-        bubble.style.border = '1px solid var(--border)';
-      }
-      bubble.textContent = text;
-      wrap.appendChild(bubble);
-      messagesEl.appendChild(wrap);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    async function loadHistory() {
-      try {
-        const res = await fetch(historyUrl, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
-        const data = await res.json().catch(function () { return {}; });
-        messagesEl.innerHTML = '';
-        (data.messages || []).forEach(function (m) {
-          if (m.role === 'user' || m.role === 'assistant') {
-            appendBubble(m.role, m.content || '');
-          }
-        });
-      } catch (e) {
-        messagesEl.innerHTML = '<div style="color:var(--muted);font-size:.82rem">Could not load history.</div>';
-      }
-    }
-
-    function setTyping(on) {
-      typingEl.style.display = on ? 'block' : 'none';
-    }
+    const chat = FitGoAiChat.init({
+      messagesEl: document.getElementById('aiChatMessages'),
+      typingEl: document.getElementById('aiChatTyping'),
+      formEl: document.getElementById('aiChatForm'),
+      inputEl: input,
+      chatUrl: @json($aiChatUrl),
+      historyUrl: @json($aiHistoryUrl),
+      loadOnInit: false,
+      emptyHint: 'Ask your coach anything — try “hello” or “what should I eat today?”',
+    });
 
     toggle.addEventListener('click', function () {
       const open = panel.style.display !== 'none';
       panel.style.display = open ? 'none' : 'flex';
       if (!open) {
-        loadHistory();
+        chat.loadHistory();
         setTimeout(function () { input.focus(); }, 50);
       }
     });
     closeBtn.addEventListener('click', function () { panel.style.display = 'none'; });
-
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const msg = (input.value || '').trim();
-      if (!msg) return;
-      input.value = '';
-      appendBubble('user', msg);
-      setTyping(true);
-      try {
-        const res = await fetch(chatUrl, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-CSRF-TOKEN': csrf,
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-          body: JSON.stringify({ message: msg }),
-        });
-        const data = await res.json().catch(function () { return {}; });
-        setTyping(false);
-        appendBubble('assistant', data.reply || 'Something went wrong — try again.');
-      } catch (err) {
-        setTyping(false);
-        appendBubble('assistant', 'Network issue. Check your connection and retry.');
-      }
-    });
   })();
 </script>
 @endpush

@@ -4,18 +4,17 @@ namespace App\Services\AI;
 
 use App\Models\ChatMessage;
 use App\Models\User;
-use App\Services\CoachResponderService;
 use Illuminate\Support\Facades\Log;
 use OpenAI\Laravel\Facades\OpenAI;
 
 class AiCoachChatService
 {
     public function __construct(
-        protected CoachResponderService $ruleCoach,
+        protected PrebuiltCoachAI $prebuiltCoach,
     ) {}
 
     /**
-     * @return array{reply: string, chips: array<int, string>}
+     * @return array{reply: string, chips: array<int, string>, engine: string}
      */
     public function send(User $user, ?string $message): array
     {
@@ -30,30 +29,36 @@ class AiCoachChatService
             'content' => $text,
         ]);
 
-        try {
-            $reply = $this->callOpenAI($user);
-            ChatMessage::create([
-                'user_id' => $user->id,
-                'role' => 'assistant',
-                'content' => $reply,
-            ]);
+        $user->loadMissing('dietPlan');
 
-            return [
-                'reply' => $reply,
-                'chips' => ['Plateau help', 'Keto snacks', 'Hydration'],
-            ];
-        } catch (\Throwable $e) {
-            Log::warning('AiCoachChat OpenAI failed', ['error' => $e->getMessage()]);
+        $apiKey = config('openai.api_key');
+        if (filled($apiKey)) {
+            try {
+                $reply = $this->callOpenAI($user);
+                ChatMessage::create([
+                    'user_id' => $user->id,
+                    'role' => 'assistant',
+                    'content' => $reply,
+                ]);
 
-            $fallback = $this->ruleCoach->respond($user->loadMissing('dietPlan'), $text);
-            ChatMessage::create([
-                'user_id' => $user->id,
-                'role' => 'assistant',
-                'content' => $fallback['reply'],
-            ]);
-
-            return $fallback;
+                return [
+                    'reply' => $reply,
+                    'chips' => $this->suggestChips($text),
+                    'engine' => 'openai',
+                ];
+            } catch (\Throwable $e) {
+                Log::warning('AiCoachChat OpenAI failed, using pre-built coach', ['error' => $e->getMessage()]);
+            }
         }
+
+        $result = $this->prebuiltCoach->reply($user, $text);
+        ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'assistant',
+            'content' => $result['reply'],
+        ]);
+
+        return $result;
     }
 
     /**
@@ -74,6 +79,22 @@ class AiCoachChatService
             ->all();
     }
 
+    /**
+     * @return array<int, string>
+     */
+    protected function suggestChips(string $lastMessage): array
+    {
+        $m = strtolower($lastMessage);
+        if (str_contains($m, 'plateau') || str_contains($m, 'stuck')) {
+            return ['Check sleep & stress', 'Walking after meals', 'Protein first'];
+        }
+        if (str_contains($m, 'eat') || str_contains($m, 'meal')) {
+            return ['Grocery ideas', 'Snacks on keto', 'Macros explained'];
+        }
+
+        return ['What should I eat today?', 'Workout for today', 'Hydration tips'];
+    }
+
     protected function callOpenAI(User $user): string
     {
         $first = explode(' ', trim($user->name))[0] ?? 'there';
@@ -92,11 +113,12 @@ class AiCoachChatService
         $quiz = $user->quiz_profile ? json_encode($user->quiz_profile, JSON_UNESCAPED_UNICODE) : '';
 
         $system = <<<SYS
-You are FitGo Coach, a supportive keto and fitness guide. Be concise (under 180 words), actionable, and safe—no medical diagnoses.
-Address the user as "{$first}". Context: goal {$user->goal->value}, activity {$user->activity_level->value}, workout pref {$user->workout_preference->value}.
+You are FitGo AI Coach, a friendly expert keto and fitness assistant. Reply naturally like ChatGPT in 2-4 short paragraphs max.
+Address the user as "{$first}". Use their real plan data when relevant. No medical diagnoses.
+Goal: {$user->goal->value}. Activity: {$user->activity_level->value}. Workout pref: {$user->workout_preference->value}.
 Macros: {$macroLine}
 Coaching tags: {$tags}
-Quiz profile JSON: {$quiz}
+Quiz profile: {$quiz}
 SYS;
 
         $recent = $user->chatMessages()
@@ -118,7 +140,7 @@ SYS;
 
         $response = OpenAI::chat()->create([
             'model' => 'gpt-4o-mini',
-            'temperature' => 0.55,
+            'temperature' => 0.65,
             'max_tokens' => 700,
             'messages' => $messages,
         ]);

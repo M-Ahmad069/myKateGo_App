@@ -19,7 +19,7 @@ class FitGoCoachController extends Controller
     public function respond(Request $request, AiCoachChatService $chat): JsonResponse
     {
         $validated = $request->validate([
-            'message' => ['nullable', 'string', 'max:600'],
+            'message' => ['nullable', 'string', 'max:2000'],
         ]);
 
         return response()->json(

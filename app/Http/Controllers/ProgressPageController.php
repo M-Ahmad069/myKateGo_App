@@ -12,30 +12,45 @@ class ProgressPageController extends Controller
     {
         $user = $request->user()->load('dietPlan');
 
-        $latestLog = $user->progressLogs()->orderByDesc('logged_date')->first();
+        $todayLog = $user->progressLogs()
+            ->whereDate('logged_date', now()->toDateString())
+            ->first();
+
+        $latestWeightLog = $user->progressLogs()
+            ->whereNotNull('weight_kg')
+            ->orderByDesc('logged_date')
+            ->first();
 
         $startWeight = (float) $user->weight_kg;
-        $currentWeight = $latestLog ? (float) $latestLog->weight_kg : $startWeight;
+        $currentWeight = $latestWeightLog
+            ? (float) $latestWeightLog->weight_kg
+            : $startWeight;
         $lostKg = round($startWeight - $currentWeight, 1);
 
-        $progressChart = $user->progressLogs()
+        $logs = $user->progressLogs()
+            ->orderByDesc('logged_date')
+            ->limit(60)
+            ->get();
+
+        $chartLogs = $user->progressLogs()
+            ->whereNotNull('weight_kg')
             ->orderBy('logged_date')
-            ->get(['logged_date', 'weight_kg', 'water_liters', 'steps', 'notes']);
+            ->get(['logged_date', 'weight_kg']);
 
-        if ($progressChart->isEmpty()) {
-            $progressChart = collect([
-                (object) ['logged_date' => now()->subDays(6)->toDateString(), 'weight_kg' => $startWeight, 'water_liters' => null, 'steps' => null, 'notes' => null],
-                (object) ['logged_date' => now()->toDateString(), 'weight_kg' => $currentWeight, 'water_liters' => null, 'steps' => null, 'notes' => null],
-            ]);
+        if ($chartLogs->isEmpty()) {
+            $chartLabels = [now()->format('M j')];
+            $chartWeights = [round($startWeight, 1)];
+        } else {
+            $chartLabels = $chartLogs->map(fn ($r) => Carbon::parse($r->logged_date)->format('M j'))->values()->all();
+            $chartWeights = $chartLogs->map(fn ($r) => round((float) $r->weight_kg, 1))->values()->all();
         }
-
-        $chartLabels = $progressChart->map(fn ($r) => Carbon::parse($r->logged_date)->format('M j'))->values()->all();
-        $chartWeights = $progressChart->map(fn ($r) => round((float) $r->weight_kg, 1))->values()->all();
 
         return view('fitgo.progress', [
             'user' => $user,
-            'logs' => $user->progressLogs()->orderByDesc('logged_date')->limit(60)->get(),
-            'latestLog' => $latestLog,
+            'logs' => $logs,
+            'todayLog' => $todayLog,
+            'latestLog' => $latestWeightLog,
+            'logCount' => $user->progressLogs()->count(),
             'startWeight' => $startWeight,
             'currentWeight' => $currentWeight,
             'lostKg' => $lostKg,

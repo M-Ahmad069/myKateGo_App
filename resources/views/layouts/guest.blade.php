@@ -11,7 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
     <link href="{{ asset('css/fitgo-theme.css') }}" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .fitgo-auth-page {
             min-height: 100vh;
@@ -73,6 +72,28 @@
             opacity: 0.92;
             transform: translateY(-1px);
         }
+        .fitgo-auth-shell form > div + div { margin-top: 1rem; }
+        .fitgo-auth-shell input[type="text"],
+        .fitgo-auth-shell input[type="email"],
+        .fitgo-auth-shell input[type="password"] {
+            width: 100%;
+            margin-top: 6px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .fitgo-auth-shell label { display: block; font-size: .88rem; }
+        .fitgo-auth-shell .flex { display: flex; }
+        .fitgo-auth-shell .items-center { align-items: center; }
+        .fitgo-auth-shell .justify-end { justify-content: flex-end; }
+        .fitgo-auth-shell .mt-4 { margin-top: 1rem; }
+        .fitgo-auth-shell .ms-3 { margin-left: 12px; }
+        .fitgo-auth-shell .ms-2 { margin-left: 8px; }
+        .fitgo-auth-shell .mb-4 { margin-bottom: 1rem; }
+        .fitgo-auth-shell .mt-2 { margin-top: 8px; font-size: .82rem; color: #fca5a5; }
+        .fitgo-auth-shell a { color: var(--g); font-size: .85rem; }
+        .fitgo-auth-shell a:hover { text-decoration: underline; }
+        .fitgo-auth-shell h2 { font-family: var(--ff-head); color: var(--heading); font-size: 1.25rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body>

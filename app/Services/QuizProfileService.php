@@ -12,8 +12,10 @@ class QuizProfileService
      */
     public function buildFromValidated(array $validated): array
     {
-        /** @var Gender $gender */
         $gender = $validated['gender'];
+        if (is_string($gender)) {
+            $gender = Gender::from($gender);
+        }
 
         $shared = [
             'goal' => $validated['goal']->value ?? (string) $validated['goal'],

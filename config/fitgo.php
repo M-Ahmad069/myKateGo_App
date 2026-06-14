@@ -4,12 +4,12 @@ return [
     /*
     | Meal plan generation: `engine` (rule-based) or `openai` (default).
     */
-    'meal_plan_driver' => env('FITGO_MEAL_DRIVER', 'openai'),
+    'meal_plan_driver' => env('FITGO_MEAL_DRIVER', 'engine'),
 
     /*
-    | Workout plan generation: `engine` (rule-based templates) or `openai` (default).
+    | Workout plan generation: `engine` (rule-based templates) or `openai`.
     */
-    'workout_plan_driver' => env('FITGO_WORKOUT_DRIVER', 'openai'),
+    'workout_plan_driver' => env('FITGO_WORKOUT_DRIVER', 'engine'),
 
     /*
     | Optional: set true to send WelcomePlanMail after GenerateUserPlansJob (default off).

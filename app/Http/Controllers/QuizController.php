@@ -83,6 +83,12 @@ class QuizController extends Controller
             $diet = ['none'];
         }
 
+        // JSON quiz submit may leave enums as strings; normalize before services/models.
+        $validated['gender'] = $this->toEnum($validated['gender'], Gender::class);
+        $validated['goal'] = $this->toEnum($validated['goal'], Goal::class);
+        $validated['activity'] = $this->toEnum($validated['activity'], ActivityLevel::class);
+        $validated['workout'] = $this->toEnum($validated['workout'], WorkoutPreference::class);
+
         $profile = app(QuizProfileService::class)->buildFromValidated($validated);
 
         $user = User::create([
@@ -114,6 +120,22 @@ class QuizController extends Controller
             'ready' => false,
             'message' => 'Your plan is being generated.',
         ], 202);
+    }
+
+    /**
+     * @template T of \BackedEnum
+     *
+     * @param  T|scalar  $value
+     * @param  class-string<T>  $enumClass
+     * @return T
+     */
+    protected function toEnum(mixed $value, string $enumClass): \BackedEnum
+    {
+        if ($value instanceof $enumClass) {
+            return $value;
+        }
+
+        return $enumClass::from((string) $value);
     }
 
     protected function normalizeHeight(Request $request): float

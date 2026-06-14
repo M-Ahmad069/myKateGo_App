@@ -1036,6 +1036,9 @@
       });
       const j = await r.json().catch(() => ({}));
       if (j.ready) return;
+      if (j.plan_status === 'failed') {
+        throw new Error('Plan generation failed. Check Laragon MySQL is running, then try the quiz again.');
+      }
       textEl.textContent = 'Almost ready... (' + (n + 1) + ')';
       await new Promise(function (x) { setTimeout(x, 2000); });
     }

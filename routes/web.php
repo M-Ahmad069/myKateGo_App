@@ -6,6 +6,9 @@ use App\Http\Controllers\AI\ProgressAnalysisController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FitGoCoachController;
 use App\Http\Controllers\FitGoProfileController;
+use App\Http\Controllers\GroceryPageController;
+use App\Http\Controllers\MealPlansPageController;
+use App\Http\Controllers\WorkoutsPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\ProgressPageController;
@@ -26,12 +29,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/app/coach', [FitGoCoachController::class, 'show'])->name('fitgo.coach');
     Route::post('/app/coach/message', [FitGoCoachController::class, 'respond'])->name('fitgo.coach.message');
 
-    Route::get('/app/meals', fn () => view('fitgo.coming-soon', ['title' => 'Meal Plans']))->name('fitgo.meals');
-    Route::get('/app/recipes', fn () => view('fitgo.coming-soon', ['title' => 'Recipe Library']))->name('fitgo.recipes');
-    Route::get('/app/grocery', fn () => view('fitgo.coming-soon', ['title' => 'Grocery List']))->name('fitgo.grocery');
-    Route::get('/app/workouts', fn () => view('fitgo.coming-soon', ['title' => 'Workouts']))->name('fitgo.workouts');
-    Route::get('/app/schedule', fn () => view('fitgo.coming-soon', ['title' => 'Schedule']))->name('fitgo.schedule');
-    Route::get('/app/help', fn () => view('fitgo.coming-soon', ['title' => 'Help Center']))->name('fitgo.help');
+    Route::get('/app/meals', [MealPlansPageController::class, 'index'])->name('fitgo.meals');
+    Route::get('/app/grocery', [GroceryPageController::class, 'index'])->name('fitgo.grocery');
+    Route::post('/app/grocery/toggle', [GroceryPageController::class, 'toggle'])->name('fitgo.grocery.toggle');
+    Route::get('/app/workouts', [WorkoutsPageController::class, 'index'])->name('fitgo.workouts');
 
     Route::get('/plan-status', function () {
         $user = auth()->user();

@@ -32,10 +32,19 @@ class DashboardController extends Controller
             ->orderBy('day_of_week')
             ->get();
 
-        $latestLog = $user->progressLogs()->orderByDesc('logged_date')->first();
+        $todayLog = $user->progressLogs()
+            ->whereDate('logged_date', now()->toDateString())
+            ->first();
+
+        $latestWeightLog = $user->progressLogs()
+            ->whereNotNull('weight_kg')
+            ->orderByDesc('logged_date')
+            ->first();
 
         $startWeight = (float) $user->weight_kg;
-        $currentWeight = $latestLog ? (float) $latestLog->weight_kg : $startWeight;
+        $currentWeight = $latestWeightLog
+            ? (float) $latestWeightLog->weight_kg
+            : $startWeight;
         $lostKg = round($startWeight - $currentWeight, 1);
 
         $progressChart = $user->progressLogs()
@@ -75,7 +84,8 @@ class DashboardController extends Controller
             'weekWorkouts' => $weekWorkouts,
             'weekNum' => $weekNum,
             'todayDow' => $todayDow,
-            'latestLog' => $latestLog,
+            'todayLog' => $todayLog,
+            'latestLog' => $todayLog, // today's water/steps on dashboard cards
             'startWeight' => $startWeight,
             'currentWeight' => $currentWeight,
             'lostKg' => $lostKg,

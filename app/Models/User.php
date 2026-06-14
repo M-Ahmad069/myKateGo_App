@@ -84,4 +84,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(ChatMessage::class);
     }
+
+    public function groceryChecks(): HasMany
+    {
+        return $this->hasMany(GroceryCheck::class);
+    }
 }

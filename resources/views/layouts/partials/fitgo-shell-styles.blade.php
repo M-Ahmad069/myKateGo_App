@@ -268,6 +268,86 @@
     }
     .coach-chip:hover { border-color: var(--g); color: var(--g); }
 
+    /* ─── AI CHAT THREAD ─── */
+    .fitgo-ai-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .fitgo-ai-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .fitgo-ai-row-user { justify-content: flex-end; }
+    .fitgo-ai-row-assistant { justify-content: flex-start; }
+    .fitgo-ai-avatar {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--g), var(--g2));
+      color: #fff;
+      font-size: .62rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--ff-head);
+    }
+    .fitgo-ai-bubble {
+      max-width: min(92%, 520px);
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: .88rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .fitgo-ai-bubble-user {
+      background: rgba(59, 130, 246, .2);
+      border: 1px solid rgba(59, 130, 246, .28);
+      color: var(--heading);
+      border-bottom-right-radius: 4px;
+    }
+    .fitgo-ai-bubble-assistant {
+      background: var(--dark4);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .fitgo-ai-empty {
+      font-size: .84rem;
+      color: var(--muted);
+      line-height: 1.55;
+      padding: 8px 4px;
+    }
+    .fitgo-ai-typing {
+      padding: 0 4px 8px;
+      font-size: .82rem;
+      color: var(--muted);
+    }
+    .fitgo-ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .75rem;
+      color: var(--g);
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 197, 94, .35);
+      background: rgba(34, 197, 94, .08);
+    }
+    .fitgo-ai-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--g);
+      box-shadow: 0 0 8px var(--g);
+    }
+
     /* ─── MOBILE SIDEBAR TOGGLE ─── */
     .mob-toggle {
       display: none;

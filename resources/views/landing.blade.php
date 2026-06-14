@@ -450,7 +450,11 @@
       </div>
 
       <div class="d-flex align-items-center gap-2">
-        <a href="{{ route('dashboard') }}" class="btn-outline-g d-none d-md-inline-flex">My Dashboard</a>
+        @auth
+          <a href="{{ route('dashboard') }}" class="btn-outline-g d-none d-md-inline-flex">My Dashboard</a>
+        @else
+          <a href="{{ route('login') }}" class="btn-outline-g d-none d-md-inline-flex">Log in</a>
+        @endauth
         <a href="{{ route('quiz') }}" class="btn-g">Take the Quiz <i class="bi bi-arrow-right"></i></a>
       </div>
     </div>
@@ -812,7 +816,11 @@
       <div class="col-6 col-lg-2">
         <div class="footer-heading">App</div>
         <a href="{{ route('quiz') }}" class="footer-link">Take the Quiz</a>
-        <a href="{{ route('dashboard') }}" class="footer-link">Dashboard</a>
+        @auth
+          <a href="{{ route('dashboard') }}" class="footer-link">Dashboard</a>
+        @else
+          <a href="{{ route('login') }}" class="footer-link">Log in</a>
+        @endauth
         <a href="#features" class="footer-link">Features</a>
       </div>
       <div class="col-6 col-lg-2">

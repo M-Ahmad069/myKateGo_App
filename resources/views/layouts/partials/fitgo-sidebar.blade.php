@@ -21,16 +21,13 @@
 
     <div class="nav-section-label">Nutrition</div>
     <a href="{{ route('fitgo.meals') }}" class="nav-item @if(request()->routeIs('fitgo.meals')) active @endif"><i class="bi bi-egg-fried"></i> Meal Plans</a>
-    <a href="{{ route('fitgo.recipes') }}" class="nav-item @if(request()->routeIs('fitgo.recipes')) active @endif"><i class="bi bi-book-fill"></i> Recipe Library</a>
     <a href="{{ route('fitgo.grocery') }}" class="nav-item @if(request()->routeIs('fitgo.grocery')) active @endif"><i class="bi bi-cart3"></i> Grocery List</a>
 
     <div class="nav-section-label">Fitness</div>
     <a href="{{ route('fitgo.workouts') }}" class="nav-item @if(request()->routeIs('fitgo.workouts')) active @endif"><i class="bi bi-lightning-charge-fill"></i> Workouts</a>
-    <a href="{{ route('fitgo.schedule') }}" class="nav-item @if(request()->routeIs('fitgo.schedule')) active @endif"><i class="bi bi-calendar3"></i> Schedule</a>
 
     <div class="nav-section-label">Support</div>
     <a href="{{ route('fitgo.coach') }}" class="nav-item @if(request()->routeIs('fitgo.coach')) active @endif"><i class="bi bi-chat-dots-fill"></i> FitGo Coach</a>
-    <a href="{{ route('fitgo.help') }}" class="nav-item @if(request()->routeIs('fitgo.help')) active @endif"><i class="bi bi-question-circle"></i> Help Center</a>
   </nav>
 
   <div class="sidebar-footer">
