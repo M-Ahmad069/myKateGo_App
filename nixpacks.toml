@@ -4,6 +4,7 @@ nixPkgs = ["php83", "composer"]
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader --no-interaction",
+  "touch database/database.sqlite",
   "chmod -R 775 storage bootstrap/cache || true"
 ]
 
